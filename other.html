@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous">
+  <link href="style.css" rel="stylesheet">
+</head>
+
+<body>
+  <h1>San Diego Top Spots</h1>
+
+  
+
+  <div class="container">
+    <div class="row">
+      <div id="map"></div>
+    </div>
+    <div class="row">
+      <table class="table table-striped table-bordered table-responsive table-condensed" id="table">
+        <thead class="blue-grey">
+          <tr>
+            <th class="col-md-1 header col-xs-2" id = "headIndex">#</th>
+            <th class="col-md-2 header col-xs-2">Name</th>
+            <th class="col-md-5 header col-xs-4" >Description</th>
+            <th class="col-md-1 header col-xs-1">Link</th>
+            <th class="col-md-1 header col-xs-1">Distance</th>
+          </tr>
+        </thead>  
+        <tbody>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+
+    var map;
+    function initMap() {
+
+      /*************************** Markers *************************/
+      var sanDiego = {
+        zoom: 15,
+        center: { lat: 32.7157, lng: -117.1611 }
+      };
+
+      map = new google.maps.Map(document.getElementById('map'), sanDiego);
+
+
+      /*************************** Markers *************************/
+      var btnVal = document.getElementsByClassName("btn");
+      //console.log(btnVal);
+      var listPosition, listPos, listName, listIndex, ListMarker;
+      for (var i = 0; i < btnVal.length; i++) {
+
+        listPos = btnVal[i].value
+        listLoc = listPos + "";
+        listPosition = listLoc.split(",", 2);
+        listMarker = { lat: parseFloat(listPosition[0]), lng: parseFloat(listPosition[1]) };
+
+        locIndex = i + 1;
+        listIndex = locIndex + "";
+        
+        listName = btnVal[i].name;
+        listName = "<b>" + listName + "<b>";
+        
+        //console.log(listMarker);
+        addMarkerWithTimeout(listMarker, listIndex, listName, 10);
+        getDistance(listMarker, locIndex);
+      };
+
+      var markers = [];
+      var infoWindow = new google.maps.InfoWindow();
+
+      function addMarkerWithTimeout(position, label, name, timeout) {
+        window.setTimeout(function () {
+          markers.push(new google.maps.Marker({
+            position: position,
+            label: label,
+            map: map,
+            title: name,
+            animation: google.maps.Animation.DROP
+          }).addListener("click", function () {
+            infoWindow.setContent(name);
+            infoWindow.setPosition(position);
+            map.setCenter(position);
+            map.setZoom(16);
+            infoWindow.open(map);
+
+          }), timeout);
+        })
+      }
+      /*************************** Get Distance************************/
+      function getDistance(nextLoc, index) {
+        navigator.geolocation.getCurrentPosition(function (position) {
+          currentPos = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude
+          };
+
+          var currentLoc = new google.maps.LatLng(currentPos);
+          var locations = new google.maps.LatLng(nextLoc);
+          var distance = google.maps.geometry.spherical.computeDistanceBetween(currentLoc, locations);
+          //console.log(currentPos, otherLocations);
+          distance = distance / 1609.344; // meters to miles
+          distance = distance.toFixed(2);
+          //console.log(distance);
+          var dist = document.getElementById("distance" + index).innerText = distance + " mi.";
+          sortTable();
+        })
+
+      }
+
+      /*************************** Current Pos*************************/
+      var currentPos;
+      infoWindow = new google.maps.InfoWindow;
+
+      navigator.geolocation.getCurrentPosition(function (position) {
+        currentPos = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude
+        };
+        var goldStar = {
+          path: 'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
+          fillColor: 'red',
+          fillOpacity: 0.8,
+          scale: .1,
+          strokeColor: 'black',
+          strokeWeight: 2
+        };
+
+        infoWindow.setPosition(currentPos);
+        map.setCenter(currentPos);
+        markers.push(new google.maps.Marker({
+          position: currentPos,
+          map: map,
+          icon: goldStar,
+        }));
+      });
+      /*************************** Table Sort *************************/
+      function sortTable() {
+        var table, rows, switching, i, x, y, shouldSwitch;
+        table = document.getElementById("table");
+        switching = true;
+        while (switching) {
+
+          switching = false;
+          rows = table.getElementsByTagName("tr");
+          for (i = 1; i < (rows.length - 1); i++) {
+
+            shouldSwitch = false;
+
+
+            x = rows[i].getElementsByTagName("td")[4];
+            y = rows[i + 1].getElementsByTagName("td")[4];
+
+            if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+              shouldSwitch = true;
+              break;
+            }
+          }
+          if (shouldSwitch) {
+            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            switching = true;
+          }
+        }
+      }
+
+    } /***** End Of InitFunc *************/
+
+
+  </script>
+
+
+
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4="
+    crossorigin="anonymous"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa"
+    crossorigin="anonymous"></script>
+
+  <script src="main.js"></script>
+  <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyD1BillFO7BLxDZPaIo0xPKYszw0rcSlM8&libraries=geometry&callback=initMap">
+  </script>
+</body>
+
+</html>
